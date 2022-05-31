@@ -1,0 +1,65 @@
+--- 
+GENERATOR: 
+  PackageName: egl
+  PackageDescription: "Package egl provides Go bindings for EGL API."
+  PackageLicense: "Bhojpur Consulting's Software Development Kit for programmers. All rights reserved."
+  FlagGroups:
+    - {name: LDFLAGS, flags: [-lEGL]}
+  SysIncludes:
+    - EGL/egl.h
+
+PARSER:
+  Arch: arm
+  SourcesPaths:
+    - EGL/egl.h
+  IncludePaths:
+    # NOTE: Replace these paths if you want to re-generate.
+    - /Volumes/Software/android/sdk/ndk/21.3.6528147/platforms/android-23/arch-arm/usr/include
+    - /Volumes/Software/android/sdk/ndk/21.3.6528147/platforms/android-23/arch-arm/usr/include/linux
+  Defines:
+    __ANDROID__: 1
+    EGLAPIENTRYP: {}
+
+TRANSLATOR: 
+  ConstRules: 
+    defines: expand
+    enum: expand
+  PtrTips:
+    function:
+      - {target: ^eglGetConfigs$, tips: [0,arr,size,ref]}
+      - {target: ^eglChooseConfig$, tips: [0,arr,arr,size,ref]}
+      - {target: ^eglCreateWindowSurface$, tips: [0,0,0,arr]}
+      - {target: ^eglCreatePbufferSurface$, tips: [0,0,arr]}
+      - {target: ^eglCreatePixmapSurface$, tips: [0,0,0,arr]}
+      - {target: ^eglCreatePbufferFromClientBuffer$, tips: [0,0,0,0,arr]}
+      - {target: ^eglCreateContext$, tips: [0,0,0,arr]}
+      - {target: ^egl, tips: [ref,ref,ref,ref]} # covers the rest
+  TypeTips:
+    type:
+      - {target: EGLint$, self: plain}
+    function:
+      - {target: ^eglGetError$, self: plain}
+  Rules: 
+    global:
+      - {action: accept, from: "^EGL"}
+      - {action: replace, from: "^EGL"}
+    function:
+      - {action: accept, from: ^egl}
+      - {action: replace, from: ^egl}
+      - {action: ignore, from: ^eglGetProcAddress}
+    type:
+      - {action: replace, from: "_t$"}
+    const:
+      - {action: ignore, from: EGL_NO_DISPLAY}
+      - {action: ignore, from: EGL_NO_SURFACE}
+      - {action: ignore, from: EGL_NO_CONTEXT}
+      - {action: ignore, from: EGL_DEFAULT_DISPLAY}
+      - {transform: lower}
+    private:
+      - {transform: unexport}
+    post-global:
+      - {action: doc, from: "^egl",
+              to: "https://www.khronos.org/registry/egl/sdk/docs/man/html/$name.xhtml"}
+      - {transform: export}
+      - {load: snakecase}
+

@@ -1,0 +1,88 @@
+--- 
+GENERATOR: 
+  PackageName: mdb
+  PackageDescription: "Package mdb provides Go bindings for liblmdb, the Symas's LMDB database library"
+  PackageLicense: "Bhojpur Consulting's Software Development Kit for programmers. All rights reserved."
+  Includes: [lmdb.h]
+  FlagGroups:
+    - {name: "CFLAGS", traits: ["linux"], flags: [-DMDB_USE_SYSV_SEM=1]}
+    - {name: "LDFLAGS", traits: ["windows"], flags: [-lntdll]}
+
+PARSER: 
+  IncludePaths: [/usr/include]
+  SourcesPaths: [mdb/lmdb.h]
+
+TRANSLATOR: 
+  ConstRules: 
+    defines: expand
+    enum: eval
+  PtrTips:
+    function:
+      - {target: "mdb_version$", self: arr, tips: [ref,ref,ref]}
+      - {target: "mdb_strerror$", self: arr}
+      - {target: "mdb_env_create$", tips: [sref]}
+      - {target: "mdb_env_stat$", tips: [ref,ref]}
+      - {target: "mdb_env_info$", tips: [ref,ref]}
+      - {target: "mdb_env_get_flags$", tips: [ref,ref]}
+      - {target: "mdb_env_get_path$", tips: [ref,sref]}
+      - {target: "mdb_env_get_fd$", tips: [ref,ref]}
+      - {target: "mdb_env_get_maxreaders$", tips: [ref,ref]}
+      - {target: "mdb_txn_begin$", tips: [ref,ref,0,sref]}
+      - {target: "mdb_dbi_open$", tips: [ref,0,0,ref]}
+      - {target: "mdb_stat$", tips: [ref,0,ref]}
+      - {target: "mdb_dbi_flags$", tips: [ref,0,ref]}
+      - {target: "mdb_get$", tips: [ref,0,ref,ref]}
+      - {target: "mdb_put$", tips: [ref,0,ref,ref]}
+      - {target: "mdb_del$", tips: [ref,0,ref,ref]}
+      - {target: "mdb_cursor_open$", tips: [ref,0,sref]}
+      - {target: "mdb_cursor_renew$", tips: [ref,ref]}
+      - {target: "mdb_cursor_get$", tips: [ref,ref,ref]}
+      - {target: "mdb_cursor_put$", tips: [ref,ref,ref]}
+      - {target: "mdb_cursor_count$", tips: [ref,ref]}
+      - {target: "mdb_cmp$", tips: [ref,0,ref,ref]}
+      - {target: "mdb_dcmp$", tips: [ref,0,ref,ref]}
+      - {target: "mdb_reader_check$", tips: [ref,ref]}
+      - {target: "MDB_cmp_func$", tips: [ref,ref]}
+      - {target: "(?i)^mdb_", tips: [ref]}
+  Rules: 
+    global: 
+      - {transform: lower}
+      - {action: accept, from: "(?i)^mdb_"}
+      - {action: replace, from: "(?i)^mdb_", to: _}
+    const:
+      - {action: replace, from: "_success$", to: err_success}
+      - {action: replace, from: "_keyexist$", to: err_key_exist}
+      - {action: replace, from: "^_notfound$", to: err_not_found}
+      - {action: replace, from: "_page_notfound$", to: err_page_not_found}
+      - {action: replace, from: "_corrupted$", to: err_corrupted}
+      - {action: replace, from: "_panic$", to: err_panic}
+      - {action: replace, from: "_version_mismatch$", to: err_version_mismatch}
+      - {action: replace, from: "_invalid$", to: err_invalid}
+      - {action: replace, from: "_map_full$", to: err_map_full}
+      - {action: replace, from: "_dbs_full$", to: err_dbs_full}
+      - {action: replace, from: "_readers_full$", to: err_readers_full}
+      - {action: replace, from: "_tls_full$", to: err_tls_full}
+      - {action: replace, from: "_txn_full$", to: err_txn_full}
+      - {action: replace, from: "_cursor_full$", to: err_cursor_full}
+      - {action: replace, from: "_page_full$", to: err_page_full}
+      - {action: replace, from: "_map_resized$", to: err_map_resized}
+      - {action: replace, from: "_incompatible$", to: err_incompatible}
+      - {action: replace, from: "_bad_rslot$", to: err_bad_rslot}
+      - {action: replace, from: "_bad_txn$", to: err_bad_txn}
+      - {action: replace, from: "_bad_valsize$", to: err_value_size}
+      - {action: replace, from: "_bad_dbi$", to: err_bad_dbi}
+    function:
+      - {action: replace, from: "_strerror$", to: str_error}
+    type: 
+      - {action: replace, from: "^me_"}
+      - {action: replace, from: "^ms_"}
+      - {action: replace, from: "^mv_"}
+      - {action: ignore, from: "_filehandle_t"}
+      - {action: replace, from: "_stat$", to: stats}
+      - {action: replace, from: "_t$"}
+    private:
+      - {transform: unexport}
+    post-global: 
+      - {action: replace, from: _$}
+      - {load: snakecase}
+      - {transform: export}

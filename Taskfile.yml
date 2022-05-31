@@ -1,0 +1,101 @@
+version: "3"
+
+vars:
+  GREETING: Hello, Bhojpur Build Developer!
+
+tasks:
+    default:
+        cmds:
+        - echo "{{.GREETING}}"
+        silent: true
+
+    build-tools:
+        desc: Build the software build tools
+        cmds:
+        - GOFLAGS=-mod=mod go build -o bin/buildc2go ./cmd/cpp/main.go 
+        - chmod 755 bin/buildc2go
+        - cp bin/buildc2go $GOPATH/bin
+        - GOFLAGS=-mod=mod go build -o bin/buildand ./cmd/android/main.go 
+        - chmod 755 bin/buildand
+        - cp bin/buildand $GOPATH/bin
+        - GOFLAGS=-mod=mod go build -o bin/buildios ./cmd/ios/main.go 
+        - chmod 755 bin/buildios
+        - cp bin/buildios $GOPATH/bin
+
+    build-desktop:
+        desc: Build the desktop application for current OS
+        cmds:
+        - guiutl package -name "Bhojpur Build" -os macos -icon build.png
+        - guiutl package -name "Bhojpur Build" -os linux -icon build.png
+        - guiutl package -name "Bhojpur Build" -os windows -icon build.png
+
+    package-android:
+        desc: Package the mobile application for Android
+        cmds:
+        - guiutl package -name "Bhojpur Build" -os android -appID net.bhojpur.build -icon build.png
+
+    package-ios:
+        desc: Package the mobile application for iOS
+        cmds:
+        - guiutl package -name "Bhojpur Build" -os ios -appID net.bhojpur.build -icon build.png
+
+    release-macos:
+        desc: Release the native application for macOS App Store
+        cmds:
+        - guiutl release -appID net.bhojpur.build -appVersion 1.0 -appBuild 1 -category business
+
+    release-android:
+        desc: Release the mobile application for Google Play
+        cmds:
+        - guiutl release -os android -appID net.bhojpur.build -appVersion 1.0 -appBuild 1
+
+    release-ios:
+        desc: Release the mobile application for iOS App Store
+        cmds:
+        - guiutl release -os ios -appID net.bhojpur.build -appVersion 1.0 -appBuild 1
+
+    run-web-server:
+        desc: Run the web server application from source code
+        cmds:
+        - GOFLAGS=-mod=mod go run server.go
+ 
+    run-web-client:
+        desc: Run the web client application from source code
+        cmds:
+        - GOFLAGS=-mod=mod go run client.go
+
+    run-mobile:
+        desc: Run the mobile client application on emulator
+        cmds:
+        - GOFLAGS=-mod=mod go run -tags mobile native/main.go
+
+    run-desktop: 
+        desc: Run the desktop application on local host
+        cmds:
+        - GOFLAGS=-mod=mod go run native/main.go
+
+    generate:
+        desc: Generate Go source code from Protocol Buffers
+        cmds:
+        - protoc --proto_path=. --proto_path=$GOPATH/src/github.com/gogo/protobuf --go_out=./pkg/api --go_opt=module=github.com/bhojpur/build/pkg/api pkg/api/v1/server/types.proto
+        - protoc --proto_path=. --proto_path=$GOPATH/src/github.com/gogo/protobuf --go-grpc_out=./pkg/api --go-grpc_opt=module=github.com/bhojpur/build/pkg/api pkg/api/v1/server/types.proto
+
+    test:
+        desc: Execute all the Unit Tests
+        cmds:
+        - gotestsum --junitfile test-results/unit-tests.xml -- -short -race -cover -coverprofile test-results/cover.out ./...
+
+    swagger.gen:
+        desc: Generate Go code
+        cmds:
+        - GOFLAGS=-mod=mod go generate bhojpur.net/build/internal bhojpur.net/build/pkg/swagger
+
+    swagger.validate:
+        desc: Validate all the Swagger API specifications
+        cmds:
+        - swagger validate pkg/swagger/swagger.yml
+
+    swagger.doc:
+        desc: Generate documentation for Swagger specified APIs
+        cmds:
+        - docker run -i yousan/swagger-yaml-to-html < pkg/swagger/swagger.yml > doc/index.html

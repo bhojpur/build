@@ -1,0 +1,49 @@
+--- 
+GENERATOR: 
+  PackageName: gles
+  PackageDescription: "Package gles provides Go bindings for the OpenGL ES v1 API."
+  PackageLicense: "Bhojpur Consulting's Software Development Kit for programmers. All rights reserved."
+  FlagGroups:
+    - {name: LDFLAGS, flags: [-lGLESv1_CM]}
+  SysIncludes:
+    - GLES/gl.h
+
+PARSER:
+  Arch: arm
+  SourcesPaths:
+    - GLES/gl.h
+  IncludePaths:
+    # NOTE: Replace these paths if you want to re-generate.
+    - /Volumes/Software/android/sdk/ndk/21.3.6528147/platforms/android-23/arch-arm/usr/include
+    - /Volumes/Software/android/sdk/ndk/21.3.6528147/platforms/android-23/arch-arm/usr/include/linux
+  Defines:
+    __ANDROID__: 1
+
+TRANSLATOR: 
+  ConstRules: 
+    defines: expand
+    enum: expand
+  TypeTips:
+    function:
+      # do not stick with GL types, use Go types for API instead
+      - {target: ., self: plain, tips: [plain,plain,plain,plain,plain,plain,plain,plain,plain]}
+  Rules: 
+    global:
+      - {action: accept, from: "^GL"}
+      - {action: replace, from: "^GL"}
+    function:
+      - {action: accept, from: ^gl}
+      - {action: replace, from: ^gl}
+      - {transform: export}
+    type:
+      - {action: replace, from: "_t$"}
+      - {transform: export}
+      - {load: snakecase}
+    const:
+      - {action: replace, from: "^_"}
+    private:
+      - {transform: unexport}
+      - {load: snakecase}
+    post-global:
+      - {action: doc, from: "^gl",
+              to: "https://www.khronos.org/opengles/sdk/1.1/docs/man/$name.xml"}

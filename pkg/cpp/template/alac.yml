@@ -1,0 +1,29 @@
+--- 
+GENERATOR: 
+  PackageName: alac
+  PackageDescription: "Package alac provides Go bindings for ALAC decoder (C version)."
+  PackageLicense: "Bhojpur Consulting's Software Development Kit for programmers. All rights reserved."
+  Includes: [alac.h]
+
+PARSER: 
+  IncludePaths: [/usr/include]
+  SourcesPaths: [alac/alac.h]
+
+TRANSLATOR: 
+  PtrTips:
+    function:
+      - {target: ^alac_decode_frame, tips: [ref,0,0,ref]}
+      - {target: ^alac_, tips: [ref]}
+  Rules: 
+    global: 
+      - {transform: lower}
+      - {action: accept, from: "alac_"}
+      - {action: replace, from: "alac_", to: _}
+      - {transform: export}
+    type: 
+      - {action: replace, from: "_t$"}
+    private:
+      - {transform: unexport}
+    post-global: 
+      - {action: replace, from: _$}
+      - {load: snakecase}
